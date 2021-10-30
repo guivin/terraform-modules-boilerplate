@@ -1,0 +1,8 @@
+{
+  "author_name": "Guillaume Vincent",
+  "author_url": "",
+  "licence": "APL2",
+  "licence_url": "http://www.apache.org/licenses/LICENSE-2.0.txt",
+  "module_name": "my-new-module",
+  "provider": "aws"
+}

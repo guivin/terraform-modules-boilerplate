@@ -1,0 +1,9 @@
+.vscode
+.idea
+**/.terraform/*
+*.log
+*.tfstate
+*.tfstate.*
+.terraformrc
+terraform.rc
+
