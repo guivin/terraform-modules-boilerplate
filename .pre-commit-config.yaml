@@ -1,1 +1,0 @@
-terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}/.pre-commit-config.yaml

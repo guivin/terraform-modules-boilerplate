@@ -1,4 +1,4 @@
-name: pre-commit
+name: Check Terraform Module
 
 on:
   pull_request:
@@ -8,44 +8,37 @@ on:
       - main
 
 jobs:
-  pre-commit:
+  lint:
     runs-on: ubuntu-latest
-    env:
-      TERRAFORM_DOCS_VERSION: v0.16.0
-      TFLINT_VERSION: v0.33.0
-      CHECKOV_VERSION: 2.0.258
-      TFSEC_VERSION: v0.58.14
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup python
-        uses: actions/setup-python@v2
-
-      - name: Install terraform-docs
-        run: |
-          curl -Lo ./terraform-docs.tar.gz https://github.com/terraform-docs/terraform-docs/releases/download/$TERRAFORM_DOCS_VERSION/terraform-docs-$TERRAFORM_DOCS_VERSION-$(uname)-amd64.tar.gz
-          tar -xzf terraform-docs.tar.gz
-          chmod +x terraform-docs
-          sudo mv terraform-docs /usr/local/terraform-docs
-
-      - name: Install tflint
-        run: "curl -s https://raw.githubusercontent.com/terraform-linters/tflint/$TFLINT_VERSION/install_linux.sh | bash"
-
-      - name: Install checkov
-        run: "pip install checkov==$CHECKOV_VERSION"
-
-      - name: Install tfsec
-        run: |
-          sudo snap install --classic go
-          go install github.com/aquasecurity/tfsec/cmd/tfsec@$TFSEC_VERSION
-
-      - name: Run pre-commit
-        uses: pre-commit/action@v2.0.3
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+      - name: Checkout the source code  
+        uses: actions/checkoutv2
+        
+      - uses: terraform-linters/setup-tflint@v1
+        name: Setup TFLint
         with:
-          terraform_version: 1.0.0
+          tflint_version: v0.29.0
+
+      - name: Init TFLint
+        run: tflint --init
+        
+      - name: Run TFLint
+        run: tflint -f compact
+        
+  docs:
+    needs: linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the source code 
+        uses: actions/checkoutv2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      
+      - name: Render terraform docs inside the USAGE.md and push changes back to PR branch
+        uses: terraform-docs/gh-actions@v0.11.0
+        with:
+          working-dir: .
+          output-file: README.md
+          output-method: inject
+          git-push: "true"
           

@@ -1,8 +1,8 @@
 # terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!--- BEGIN_TF_DOCS --->
 
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!--- END_TF_DOCS --->
 
 ## Authors
 
