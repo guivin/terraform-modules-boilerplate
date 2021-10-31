@@ -8,12 +8,7 @@ on:
 
 jobs:
   tflint:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         name: Checkout source code
@@ -37,3 +32,15 @@ jobs:
 
       - name: Run TFLint
         run: tflint -f compact --module ./terraform-\{\{cookiecutter.provider\}\}-\{\{cookiecutter.module_name\}\} 
+
+  terraform:
+    needs: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout source code
+      
+      - uses: hashicorp/setup-terraform@v1
+        name: Setup Terraform
+        with:
+          terraform_version: 1.0.0
