@@ -1,25 +1,39 @@
-name: Check Terraform Module
+name: Lint
 on:
-  pull_request:
   push:
     branches:
-      - master
       - main
-      
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the source code
-        uses: actions/checkoutv2
+      - master
+  pull_request:
 
-      #- name: Setup TFLint
-      #  uses: terraform-linters/setup-tflint@v1
-      #  with:
-      #    tflint_version: v0.29.0
-#
-      #- name: Init TFLint
-      #  run: tflint --init
-#
-      #- name: Run TFLint
-      #  run: tflint -f compact
+jobs:
+  tflint:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout source code
+
+      - uses: actions/cache@v2
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+      - uses: terraform-linters/setup-tflint@v1
+        name: Setup TFLint
+        with:
+          tflint_version: v0.29.0
+
+      - name: Show version
+        run: tflint --version
+
+      - name: Init TFLint
+        run: tflint --init --module ./terraform-\{\{cookiecutter.provider\}\}-\{\{cookiecutter.module_name\}\}
+
+      - name: Run TFLint
+        run: tflint -f compact --module ./terraform-\{\{cookiecutter.provider\}\}-\{\{cookiecutter.module_name\}\} 
