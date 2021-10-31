@@ -10,17 +10,17 @@ jobs:
   tflint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        name: Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v2
 
-      - uses: actions/cache@v2
-        name: Cache plugin dir
+      - name: Cache plugin dir
+        uses: actions/cache@v2
         with:
           path: ~/.tflint.d/plugins
           key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
 
-      - uses: terraform-linters/setup-tflint@v1
-        name: Setup TFLint
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v1
         with:
           tflint_version: v0.29.0
 
@@ -28,19 +28,68 @@ jobs:
         run: tflint --version
 
       - name: Init TFLint
-        run: tflint --init --module ./terraform-\{\{cookiecutter.provider\}\}-\{\{cookiecutter.module_name\}\}
+        run: tflint --init --module ./terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}
 
       - name: Run TFLint
-        run: tflint -f compact --module ./terraform-\{\{cookiecutter.provider\}\}-\{\{cookiecutter.module_name\}\} 
+        run: tflint -f compact --module ./terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}} 
 
   terraform:
     needs: tflint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        name: Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v2
       
-      - uses: hashicorp/setup-terraform@v1
-        name: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.0.0
+
+      - name: Terraform Format
+        id: fmt
+        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform fmt -check`
+        
+      - name: Terraform Init
+        id: init
+        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform init
+        
+      - name: Terraform Validate
+        id: validate
+        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform validate -no-color
+        
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform plan -no-color
+        
+      - name: Update Pull Request
+        uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+        
+        
