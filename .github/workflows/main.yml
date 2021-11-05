@@ -60,6 +60,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform plan -no-color
         
       - name: Update Pull Request
