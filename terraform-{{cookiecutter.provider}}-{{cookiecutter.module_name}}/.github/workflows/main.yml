@@ -1,4 +1,4 @@
-name: Check Terraform Module
+name: check {{cookiecutter.module_name}} module
 
 on:
   pull_request:
@@ -12,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the source code  
-        uses: actions/checkoutv2
+        uses: actions/checkout@v2
         
       - uses: terraform-linters/setup-tflint@v1
         name: Setup TFLint
         with:
-          tflint_version: v0.29.0
+          tflint_version: v0.33.1
 
       - name: Init TFLint
         run: tflint --init
@@ -30,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the source code 
-        uses: actions/checkoutv2
+        uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ "{{" }} github.event.pull_request.head.ref }}
       
-      - name: Render terraform docs inside the USAGE.md and push changes back to PR branch
+      - name: Render terraform docs inside the README.md and push changes back to PR branch
         uses: terraform-docs/gh-actions@v0.11.0
         with:
           working-dir: .

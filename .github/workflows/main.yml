@@ -47,7 +47,7 @@ jobs:
 
       - name: Terraform Format
         id: fmt
-        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform fmt -check`
+        run: DIR="terraform-{{cookiecutter.provider}}-{{cookiecutter.module_name}}" terraform fmt -check
         
       - name: Terraform Init
         id: init
